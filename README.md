@@ -55,6 +55,8 @@ After each successful session:
   - Loading/saving operations
   - Vault update mechanisms
 
+* `initialize_vault.py`: Initializes the shared vault
+
 * `utils.py`: Provides cryptographic and utility functions
   - AES encryption/decryption
   - Key combination operations
