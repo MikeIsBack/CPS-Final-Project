@@ -38,7 +38,7 @@ The simulation consists of three key steps:
 
 ### Vault Management
 
-* `vault_manager.py`: Handles operations related to the shared vault, including initialization, loading, saving, and updating the vault
+* `vault.py`: Handles operations related to the shared vault, including initialization, loading, saving, and updating the vault
 * `initialize_vault.py`: Initializes the shared vault and saves it to a file. Run this file to create the initial vault before starting the server or device
 
 ### Utility Functions
