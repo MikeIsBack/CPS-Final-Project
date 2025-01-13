@@ -1,4 +1,4 @@
-# Vault management functions: handles vault initialization, updates, and key combination.
+# Vault management functions: handles vault initialization, loading and updates.
 
 import pickle
 from constants import *

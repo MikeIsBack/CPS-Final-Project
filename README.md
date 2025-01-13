@@ -6,65 +6,73 @@ This repository contains a simulation of an authentication protocol between an I
 
 The project demonstrates a method for establishing secure communication between an IoT device and a server. A shared vault is used as the central storage for cryptographic keys, and its state is updated after each authentication session to enhance security. The server and device exchange challenge indices to generate a combined key, which is then used for authentication and updating the vault.
 
-## Key Features
+## Protocol Flow
 
-* Centralized vault management to maintain shared state between the IoT server and device
-* Cryptographic operations using AES-128 for secure key management and vault updates
-* Session-based mutual authentication with support for updating shared vaults after each session
-* A modular and extensible design for cryptographic and session operations
+The authentication protocol consists of a four-message exchange (M1-M4) in each session:
 
-## Flow of the Simulation
+1. **M1: Initial Contact**
+   * Device sends its Device ID and Session ID to the server
+   * Format: `(device_id, session_id)`
 
-The simulation consists of three key steps:
+2. **M2: Server Challenge**
+   * Server generates random challenge indices (C1) and nonce (r1)
+   * Server sends `(C1, r1)` to the device
+   * C1 determines which vault keys to combine for k1
 
-1. **Vault Initialization**
-   * A shared vault is initialized and stored in a centralized file (`vault.pkl`)
-   * The vault contains randomly generated cryptographic keys
+3. **M3: Device Response and Challenge**
+   * Device generates:
+     - Random timestamp t1
+     - Challenge indices C2
+     - Nonce r2
+   * Device computes k1 by XORing vault keys specified by C1
+   * Device encrypts `(r1, t1, C2, r2)` using k1
+   * Device sends encrypted data to server
 
-2. **Session-Based Authentication**
-   * The IoT device generates random challenge indices and sends them to the server
-   * The server computes a combined key using the shared vault and challenge indices
-   * Both the server and the device update the vault using the combined key after each session
+4. **M4: Server Response**
+   * Server verifies r1 from device response
+   * Server computes k2 using C2 indices
+   * Server generates timestamp t2
+   * Server encrypts `(r2, t2)` using k2
+   * Server sends encrypted response to device
 
-3. **Vault Updates**
-   * After each session, the vault is updated using XOR operations with the combined key
-   * The updated vault is saved to ensure synchronization between the device and server
+After each successful session:
+* Both parties compute a combined key from k1 and k2
+* The vault is updated by XORing each key with the combined key
+* The updated vault is saved for the next session
 
 ## File Structure
 
-### Configuration Files
+### Configuration
+* `constants.py`: Defines system constants
+  - Vault configuration (size, key length)
+  - Network settings
+  - Session parameters
+  - Cryptographic settings
 
-* `constants.py`: Contains global configuration constants, including vault size, key size, network settings, and session duration
+### Core Components
+* `vault.py`: Manages the shared vault
+  - Initialization
+  - Loading/saving operations
+  - Vault update mechanisms
 
-### Vault Management
+* `utils.py`: Provides cryptographic and utility functions
+  - AES encryption/decryption
+  - Key combination operations
+  - Data padding/unpadding
+  - Random index generation
 
-* `vault.py`: Handles operations related to the shared vault, including initialization, loading, saving, and updating the vault
-* `initialize_vault.py`: Initializes the shared vault and saves it to a file. Run this file to create the initial vault before starting the server or device
+### Implementation
+* `server.py`: Server-side implementation
+  - Handles multiple authentication sessions
+  - Manages challenge generation
+  - Processes device responses
+  - Updates vault state
 
-### Utility Functions
-
-* `utils.py`: Contains cryptographic and utility functions, including:
-  * Vault initialization
-  * AES encryption and decryption
-  * Generating combined keys from challenge indices
-
-### Session Management
-
-* `session.py`: Manages session timing, including start, end, and active session checks
-
-### Server and Device Implementation
-
-* `server.py`: Simulates the IoT server that:
-  * Receives challenge indices from the device
-  * Computes the combined key
-  * Sends the combined key back to the device
-  * Updates the shared vault after each session
-
-* `client.py`: Simulates the IoT device that:
-  * Generates random challenge indices
-  * Sends the indices to the server
-  * Receives the combined key from the server
-  * Updates the shared vault after each session
+* `device.py`: Client-side implementation
+  - Initiates authentication sessions
+  - Responds to server challenges
+  - Generates counter-challenges
+  - Synchronizes vault updates
 
 ## Installation and Usage
 
