@@ -32,7 +32,7 @@ The authentication protocol consists of a four-message exchange (M1-M4) in each 
    * Server verifies r1 from device response
    * Server computes k2 using C2 indices
    * Server generates timestamp t2
-   * Server encrypts `(r2, t2)` using k2
+   * Server encrypts `(r2, t2)` using k2 xored with t1
    * Server sends encrypted response to device
 
 After each successful session:
