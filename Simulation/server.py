@@ -1,12 +1,9 @@
 # Server-side implementation: simulates the server's multi-session operation
 
-import random
-import socket
-import pickle
-from vault import load_vault
-from utils import decrypt, encrypt, generate_random_indices, get_combined_key, pad_data, unpad_data, xor_keys
-from vault import update_vault
-from constants import *
+import random, socket, pickle
+from constants import SERVER_HOST, SERVER_PORT
+from vault import load_vault, update_vault
+from utils import decrypt, encrypt, generate_random_indices, pad_data, unpad_data, xor_keys
 
 def server():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
@@ -18,8 +15,10 @@ def server():
         with conn:
             print(f"Connected to {addr}")
 
-            for session_id in range(1, 4):
-                print(f"Session {session_id}: Starting")
+            n_emulated_sessions = 5
+
+            for session_id in range(0, n_emulated_sessions):
+                print(f"\nSession {session_id}: Starting")
 
                 # Load the shared vault
                 vault = load_vault()
@@ -30,7 +29,7 @@ def server():
                 print(f"M1 Received: Device ID: {device_id}, Session ID: {received_session_id}")
 
                 # M2: Generate and send challenge {C1, r1}
-                C1 = generate_random_indices(len(vault), 3)
+                C1 = generate_random_indices(len(vault))
                 r1 = random.getrandbits(128).to_bytes(16, 'big')
                 conn.sendall(pickle.dumps((C1, r1)))
                 print(f"M2 Sent: C1={C1}, r1={r1.hex()}")
@@ -48,12 +47,15 @@ def server():
                     print("Authentication failed: r1 mismatch")
                     continue
 
-                # M4: Generate and send response {Enc(k2, r2 || t2)}
+                # M4: Generate and send response {Enc(k2 ⊕ t1, r2 || t2)}
                 t2 = random.getrandbits(128).to_bytes(16, 'big')
                 k2 = xor_keys(vault, C2)
+                encryption_key = int.from_bytes(k2, 'big') ^ int.from_bytes(t1, 'big')
+                encryption_key = encryption_key.to_bytes(len(k2), 'big')
+
                 response = pickle.dumps((r2, t2))
                 padded_response = pad_data(response)
-                encrypted_response = encrypt(k2, padded_response)
+                encrypted_response = encrypt(encryption_key, padded_response)
                 conn.sendall(encrypted_response)
                 print(f"M4 Sent: r2={r2.hex()}, t2={t2.hex()}")
 

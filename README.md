@@ -102,9 +102,9 @@ python initialize_vault.py
 python server.py
 ```
 
-3. Start the Device:
+3. Open a different terminal and start the Device:
 ```bash
 python client.py
 ```
 
-The server and client will perform three authentication sessions, updating the vault after each session.
+The server and client will perform different authentication sessions (by default five but the parameter can be changed), updating the vault after each session using exchanged data during each session.

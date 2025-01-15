@@ -1,15 +1,10 @@
-# Utility functions: provides cryptographic and utility functions
+# Utility: provides cryptographic and utility functions
 
-import os
 import random
 from constants import AES_KEY_SIZE
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
-
-def initialize_vault(size, key_size):
-    """Initialize a secure vault with random keys."""
-    return [os.urandom(key_size) for _ in range(size)]
 
 def pad_data(data):
     """Pad data to make it a multiple of the block size."""
@@ -33,15 +28,9 @@ def decrypt(key, ciphertext):
     decryptor = cipher.decryptor()
     return decryptor.update(ciphertext) + decryptor.finalize()
 
-def get_combined_key(vault, indices):
-    """Generate a combined key by XORing selected keys from the vault."""
-    combined_key = int.from_bytes(vault[indices[0]], 'big')
-    for index in indices[1:]:
-        combined_key ^= int.from_bytes(vault[index], 'big')
-    return combined_key
-
-def generate_random_indices(vault_size, count):
+def generate_random_indices(vault_size):
     """Generate a list of distinct random indices."""
+    count = random.randint(2, vault_size)
     return random.sample(range(vault_size), count)
 
 def xor_keys(vault, indices):

@@ -1,19 +1,18 @@
 # Device-side implementation: simulates the client's multi-session operation
 
-from hashlib import sha256
-import socket
-import pickle
-import random
-from utils import *
-from vault import load_vault, update_vault
+import random, socket, pickle
 from constants import SERVER_HOST, SERVER_PORT
+from vault import load_vault, update_vault
+from utils import decrypt, encrypt, generate_random_indices, pad_data, unpad_data, xor_keys
 
 def device():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
         client_socket.connect((SERVER_HOST, SERVER_PORT))
 
-        for session_id in range(1, 4):
-            print(f"Session {session_id}: Starting")
+        n_emulated_sessions = 5
+
+        for session_id in range(0, n_emulated_sessions):
+            print(f"\nSession {session_id}: Starting")
 
             # Load the shared vault
             vault = load_vault()
@@ -29,11 +28,11 @@ def device():
             C1, r1 = pickle.loads(data)
             print(f"M2 Received: C1={C1}, r1={r1.hex()}")
 
-            # M3: Compute response {Enc(k1, r1 || t1 || C2 || r2)}
-            t1 = random.getrandbits(128).to_bytes(16, 'big')
-            C2 = generate_random_indices(len(vault), 3)
-            r2 = random.getrandbits(128).to_bytes(16, 'big')
+            # M3: Compute response {Enc(k1, r1 || t1 || {C2, r2})}
             k1 = xor_keys(vault, C1)
+            t1 = random.getrandbits(128).to_bytes(16, 'big')
+            C2 = generate_random_indices(len(vault))
+            r2 = random.getrandbits(128).to_bytes(16, 'big')
             response = pickle.dumps((r1, t1, C2, r2))
             padded_response = pad_data(response)
             encrypted_response = encrypt(k1, padded_response)
@@ -43,7 +42,10 @@ def device():
             # M4: Receive and process server response
             data = client_socket.recv(1024)
             k2 = xor_keys(vault, C2)
-            decrypted_response = unpad_data(decrypt(k2, data))
+            decryption_key = int.from_bytes(k2, 'big') ^ int.from_bytes(t1, 'big')
+            decryption_key = decryption_key.to_bytes(len(k2), 'big')
+
+            decrypted_response = unpad_data(decrypt(decryption_key, data))
             r2_received, t2 = pickle.loads(decrypted_response)
             print(f"M4 Received: r2={r2_received.hex()}, t2={t2.hex()}")
 
