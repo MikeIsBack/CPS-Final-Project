@@ -70,7 +70,7 @@ After each successful session:
   - Processes device responses
   - Updates vault state
 
-* `device.py`: Client-side implementation
+* `client.py`: Client-side implementation
   - Initiates authentication sessions
   - Responds to server challenges
   - Generates counter-challenges
@@ -102,7 +102,7 @@ python initialize_vault.py
 python server.py
 ```
 
-3. Open a different terminal and start the Device:
+3. Open a different terminal and start the Client:
 ```bash
 python client.py
 ```
