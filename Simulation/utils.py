@@ -30,7 +30,7 @@ def decrypt(key, ciphertext):
 
 def generate_random_indices(vault_size):
     """Generate a list of distinct random indices."""
-    count = random.randint(2, vault_size)
+    count = random.randint(2, vault_size-1) # was (2,vault_size)
     return random.sample(range(vault_size), count)
 
 def xor_keys(vault, indices):

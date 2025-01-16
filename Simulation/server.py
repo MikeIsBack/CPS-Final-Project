@@ -1,7 +1,7 @@
 # Server-side implementation: simulates the server's multi-session operation
 
 import random, socket, pickle
-from constants import SERVER_HOST, SERVER_PORT
+from constants import SERVER_HOST, SERVER_PORT, HASH_SIZE
 from vault import load_vault, update_vault
 from utils import decrypt, encrypt, generate_random_indices, pad_data, unpad_data, xor_keys
 
@@ -60,7 +60,8 @@ def server():
                 print(f"M4 Sent: r2={r2.hex()}, t2={t2.hex()}")
 
                 # Update the vault
-                vault = update_vault(vault, int.from_bytes(k1, 'big') ^ int.from_bytes(k2, 'big'))
+                exchanged_data = (int.from_bytes(k1, 'big') ^ int.from_bytes(k2, 'big')).to_bytes(len(k1), 'big')
+                vault = update_vault(vault, exchanged_data, HASH_SIZE) #vault = update_vault(vault, int.from_bytes(k1, 'big') ^ int.from_bytes(k2, 'big'), HASH_SIZE)
                 print(f"Session {session_id}: Vault updated")
 
 if __name__ == "__main__":
