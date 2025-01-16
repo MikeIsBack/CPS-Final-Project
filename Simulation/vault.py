@@ -35,14 +35,13 @@ def save_vault(vault):
 #     save_vault(updated_vault)
 #     return updated_vault
 
-def update_vault(vault, exchanged_data, hash_size):
+def update_vault(vault, exchanged_data):
     """
     Update the secure vault using the HMAC-based method.
 
     Parameters:
     - vault: Current secure vault (list of byte keys).
     - exchanged_data: Data exchanged between the server and the IoT device (bytes).
-    - hash_size: Size of the hash function output in bits (e.g., 256 for SHA-256).
 
     Returns:
     - Updated secure vault (list of byte keys).
