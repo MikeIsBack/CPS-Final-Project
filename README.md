@@ -95,7 +95,7 @@ pip install cryptography
 
 1. Initialize the Vault:
 ```bash
-python initialize_vault.py
+python initialize_vault.py --key-size <16|32>
 ```
 
 2. Start the Server:
