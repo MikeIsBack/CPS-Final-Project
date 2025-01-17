@@ -15,7 +15,8 @@ def client():
             print(f"\nSession {session_id}: Starting")
 
             # Load the shared vault
-            vault = load_vault()
+            vault, key_size = load_vault()
+            print(f"Loaded key size: {key_size} bytes")
 
             # M1: Send device ID and session ID
             device_id = "Device123"
@@ -30,11 +31,11 @@ def client():
 
             # M3: Compute response {Enc(k1, r1 || t1 || {C2, r2})}
             k1 = xor_keys(vault, C1)
-            t1 = random.getrandbits(128).to_bytes(16, 'big')
+            t1 = random.getrandbits(key_size*8).to_bytes(key_size, 'big')
             C2 = generate_random_indices(len(vault))
-            r2 = random.getrandbits(128).to_bytes(16, 'big')
+            r2 = random.getrandbits(key_size*8).to_bytes(key_size, 'big')
             response = pickle.dumps((r1, t1, C2, r2))
-            padded_response = pad_data(response)
+            padded_response = pad_data(response,key_size)
             encrypted_response = encrypt(k1, padded_response)
             client_socket.sendall(encrypted_response)
             print(f"M3 Sent: r1={r1.hex()}, t1={t1.hex()}, C2={C2}, r2={r2.hex()}")
@@ -45,7 +46,7 @@ def client():
             decryption_key = int.from_bytes(k2, 'big') ^ int.from_bytes(t1, 'big')
             decryption_key = decryption_key.to_bytes(len(k2), 'big')
 
-            decrypted_response = unpad_data(decrypt(decryption_key, data))
+            decrypted_response = unpad_data(decrypt(decryption_key, data),key_size)
             r2_received, t2 = pickle.loads(decrypted_response)
             print(f"M4 Received: r2={r2_received.hex()}, t2={t2.hex()}")
 
@@ -56,7 +57,7 @@ def client():
 
             # Update the vault
             exchanged_data = (int.from_bytes(k1, 'big') ^ int.from_bytes(k2, 'big')).to_bytes(len(k1), 'big')
-            vault = update_vault(vault, exchanged_data)
+            vault = update_vault(vault, exchanged_data, key_size)
             print(f"Session {session_id}: Vault updated")
 
 if __name__ == "__main__":

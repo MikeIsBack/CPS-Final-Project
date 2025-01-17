@@ -21,7 +21,8 @@ def server():
                 print(f"\nSession {session_id}: Starting")
 
                 # Load the shared vault
-                vault = load_vault()
+                vault, key_size = load_vault()
+                print(f"Loaded key size: {key_size} bytes")
 
                 # M1: Receive device ID and session ID
                 data = conn.recv(1024)
@@ -30,7 +31,7 @@ def server():
 
                 # M2: Generate and send challenge {C1, r1}
                 C1 = generate_random_indices(len(vault))
-                r1 = random.getrandbits(128).to_bytes(16, 'big')
+                r1 = random.getrandbits(key_size*8).to_bytes(key_size, 'big')
                 conn.sendall(pickle.dumps((C1, r1)))
                 print(f"M2 Sent: C1={C1}, r1={r1.hex()}")
 
@@ -38,7 +39,7 @@ def server():
                 data = conn.recv(1024)
                 encrypted_response = data
                 k1 = xor_keys(vault, C1)
-                decrypted_response = unpad_data(decrypt(k1, encrypted_response))
+                decrypted_response = unpad_data(decrypt(k1, encrypted_response),key_size)
                 r1_received, t1, C2, r2 = pickle.loads(decrypted_response)
                 print(f"M3 Received: r1={r1_received.hex()}, t1={t1.hex()}, C2={C2}, r2={r2.hex()}")
 
@@ -48,20 +49,20 @@ def server():
                     continue
 
                 # M4: Generate and send response {Enc(k2 ⊕ t1, r2 || t2)}
-                t2 = random.getrandbits(128).to_bytes(16, 'big')
+                t2 = random.getrandbits(key_size*8).to_bytes(key_size, 'big')
                 k2 = xor_keys(vault, C2)
                 encryption_key = int.from_bytes(k2, 'big') ^ int.from_bytes(t1, 'big')
                 encryption_key = encryption_key.to_bytes(len(k2), 'big')
 
                 response = pickle.dumps((r2, t2))
-                padded_response = pad_data(response)
+                padded_response = pad_data(response,key_size)
                 encrypted_response = encrypt(encryption_key, padded_response)
                 conn.sendall(encrypted_response)
                 print(f"M4 Sent: r2={r2.hex()}, t2={t2.hex()}")
 
                 # Update the vault
                 exchanged_data = (int.from_bytes(k1, 'big') ^ int.from_bytes(k2, 'big')).to_bytes(len(k1), 'big')
-                vault = update_vault(vault, exchanged_data)
+                vault = update_vault(vault, exchanged_data, key_size)
                 print(f"Session {session_id}: Vault updated")
 
 if __name__ == "__main__":
