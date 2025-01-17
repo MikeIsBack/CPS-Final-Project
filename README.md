@@ -37,8 +37,9 @@ The authentication protocol consists of a four-message exchange (M1-M4) in each 
 
 After each successful session:
 * Both parties compute a combined key from k1 and k2
-* The vault is updated by XORing each key with the combined key
-* The updated vault is saved for the next session
+* The vault is updated using an HMAC-based mechanism, where an HMAC is generated from the exchanged session data and the current vault
+* Each partition of the vault is XORed with a mask derived from the HMAC to ensure secure and unique updates
+* The updated vault is saved for the next session, ensuring synchronization between both parties
 
 ## File Structure
 

@@ -5,7 +5,7 @@ from constants import SERVER_HOST, SERVER_PORT
 from vault import load_vault, update_vault
 from utils import decrypt, encrypt, generate_random_indices, pad_data, unpad_data, xor_keys
 
-def device():
+def client():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
         client_socket.connect((SERVER_HOST, SERVER_PORT))
 
@@ -24,7 +24,7 @@ def device():
             print(f"M1 Sent: Device ID={device_id}, Session ID={session_id}")
 
             # M2: Receive challenge {C1, r1}
-            data = client_socket.recv(1024) # Device waits for the challenge sent by the server. 1024 is max number of bytes to receive in one call
+            data = client_socket.recv(1024)
             C1, r1 = pickle.loads(data)
             print(f"M2 Received: C1={C1}, r1={r1.hex()}")
 
@@ -56,8 +56,8 @@ def device():
 
             # Update the vault
             exchanged_data = (int.from_bytes(k1, 'big') ^ int.from_bytes(k2, 'big')).to_bytes(len(k1), 'big')
-            vault = update_vault(vault, exchanged_data) #vault = update_vault(vault, int.from_bytes(k1, 'big') ^ int.from_bytes(k2, 'big'), HASH_SIZE)
+            vault = update_vault(vault, exchanged_data)
             print(f"Session {session_id}: Vault updated")
 
 if __name__ == "__main__":
-    device()
+    client()

@@ -61,7 +61,7 @@ def server():
 
                 # Update the vault
                 exchanged_data = (int.from_bytes(k1, 'big') ^ int.from_bytes(k2, 'big')).to_bytes(len(k1), 'big')
-                vault = update_vault(vault, exchanged_data) #vault = update_vault(vault, int.from_bytes(k1, 'big') ^ int.from_bytes(k2, 'big'), HASH_SIZE)
+                vault = update_vault(vault, exchanged_data)
                 print(f"Session {session_id}: Vault updated")
 
 if __name__ == "__main__":
