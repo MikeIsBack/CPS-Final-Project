@@ -22,27 +22,17 @@ def save_vault(vault):
         pickle.dump(vault, f)
 
 def update_vault(vault, exchanged_data):
-    """
-    Update the secure vault using the HMAC-based method.
-
-    Parameters:
-    - vault: Current secure vault (list of byte keys).
-    - exchanged_data: Data exchanged between the server and the IoT device (bytes).
-
-    Returns:
-    - Updated secure vault (list of byte keys).
-    """
-    # Step 1: Compute HMAC
-    h = hmac.new(exchanged_data, b''.join(vault), hashlib.sha256).digest()
+    """Update the secure vault using the HMAC-based method."""
+    h = hmac.new(exchanged_data, b''.join(vault), hashlib.sha256).digest() # Compute HMAC
     h = h[:AES_KEY_SIZE]  # Truncate HMAC output to match AES-128 key size
     
-    # Step 2: Pad the vault if necessary
+    # Pad the vault if necessary
     vault_bytes = b''.join(vault)
     if len(vault_bytes) % AES_KEY_SIZE != 0:
         padding_size = AES_KEY_SIZE - (len(vault_bytes) % AES_KEY_SIZE)
         vault_bytes += b'\x00' * padding_size
 
-    # Step 3: Divide the vault into partitions and update
+    # Divide the vault into partitions and update
     partitions = [
         vault_bytes[i:i + AES_KEY_SIZE]
         for i in range(0, len(vault_bytes), AES_KEY_SIZE)
@@ -56,11 +46,10 @@ def update_vault(vault, exchanged_data):
         updated_partition = bytes(p ^ h_i for p, h_i in zip(partition, xor_h_i))
         updated_vault.append(updated_partition)
 
-    # Reassemble the vault with correct key sizes (AES_KEY_SIZE)
+    # Reassemble the vault
     new_vault = [
         updated_vault[i][:AES_KEY_SIZE] for i in range(len(vault))
     ]
 
-    # Save the updated vault
     save_vault(new_vault)
     return new_vault
