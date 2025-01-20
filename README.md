@@ -77,6 +77,12 @@ After each successful session:
   - Generates counter-challenges
   - Synchronizes vault updates
 
+### Experiments
+* `experiments.py`: Implements tests to evaluate the security of the vault
+  - Simulates random vault guessing to match the actual vault
+  - Implements key-by-key guessing, trying all combinations for each key sequentially
+  - Demonstrates the impracticality of brute force attacks due to the enormous key space
+
 ## Installation and Usage
 
 ### Prerequisites
