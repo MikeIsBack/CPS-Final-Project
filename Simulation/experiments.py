@@ -1,5 +1,5 @@
 import os, time, itertools
-from constants import AES_KEY_SIZE, VAULT_SIZE
+from constants import AES_KEY_SIZE
 from vault import load_vault
 
 def generate_random_vault(size, key_size):
@@ -60,7 +60,6 @@ def brute_force_vault_key_by_key(actual_vault, key_size):
 if __name__ == "__main__":
     actual_vault = load_vault()
 
-    # attempts, elapsed_time = brute_force_vault(actual_vault, AES_KEY_SIZE, VAULT_SIZE)
     attempts, elapsed_time = brute_force_vault_key_by_key(actual_vault, AES_KEY_SIZE)
 
     print(f"Brute force attack successful!")
